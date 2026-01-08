@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cine Privado</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: #fff;
+  text-align: center;
+}
+header {
+  background: #111;
+  padding: 10px;
+  font-size: 20px;
+}
+video {
+  width: 45%;
+  background: #000;
+  margin: 5px;
+  border-radius: 10px;
+}
+#controls button {
+  margin: 5px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background: #1db954;
+  color: #fff;
+  font-size: 14px;
+}
+#chat {
+  width: 90%;
+  margin: auto;
+}
+#messages {
+  height: 150px;
+  overflow-y: auto;
+  background: #111;
+  margin-bottom: 5px;
+  padding: 5px;
+}
+input {
+  width: 80%;
+  padding: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>🎬 Cine Privado</header>
+
+<div>
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
+</div>
+
+<div id="controls">
+  <button onclick="startCall()">📞 Iniciar</button>
+  <button onclick="shareScreen()">🖥 Compartir pantalla</button>
+</div>
+
+<div id="chat">
+  <div id="messages"></div>
+  <input id="msg" placeholder="Escribí un mensaje...">
+  <button onclick="sendMsg()">Enviar</button>
+</div>
+
+<script>
+let localStream;
+let pc;
+const config = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+};
+
+async function startCall() {
+  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  document.getElementById("localVideo").srcObject = localStream;
+
+  pc = new RTCPeerConnection(config);
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+  pc.ontrack = e => document.getElementById("remoteVideo").srcObject = e.streams[0];
+}
+
+async function shareScreen() {
+  const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+  const sender = pc.getSenders().find(s => s.track.kind === "video");
+  sender.replaceTrack(screen.getTracks()[0]);
+}
+
+function sendMsg() {
+  const msg = document.getElementById("msg").value;
+  document.getElementById("messages").innerHTML += "<div>🗨 " + msg + "</div>";
+  document.getElementById("msg").value = "";
+}
+</script>
+
+</body>
+</html>
